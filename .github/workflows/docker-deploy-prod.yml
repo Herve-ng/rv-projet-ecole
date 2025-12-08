@@ -1,19 +1,11 @@
-name: 🚀 PROD Build
+name: 🚀 DEV Build
 
 on:
-  push:
-    branches:
-      - main
-      - release
   workflow_dispatch:
-
-permissions:
-  contents: read
-  packages: write
 
 jobs:
   build:
-    uses: brege-ng/infra_devops_pipelines/.github/workflows/build-auto.yml@main
+    uses: cabinet-ceipi/infra-devops-pipelines/.github/workflows/build-manual.yml@main
     with:
       dockerfile: ./Dockerfile
       context: .
