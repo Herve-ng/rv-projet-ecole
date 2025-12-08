@@ -3,6 +3,10 @@ name: 🚀 DEV Build
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write  # nécessaire pour push GHCR depuis le workflow appelé
+
 jobs:
   build:
     uses: brege-ng/infra_devops_pipelines/.github/workflows/build-manual.yml@main
