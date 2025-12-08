@@ -9,11 +9,11 @@ on:
 
 permissions:
   contents: read
-  packages: write  # <- attention, GitHub bloque si repo externe privé
+  packages: write
 
 jobs:
   build:
-    uses: cabinet-ceipi/infra-devops-pipelines/.github/workflows/build-auto.yml@main
+    uses: brege-ng/infra_devops_pipelines/.github/workflows/build-auto.yml@main
     with:
       dockerfile: ./Dockerfile
       context: .
