@@ -7,6 +7,10 @@ on:
       - release
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write  # <- attention, GitHub bloque si repo externe privé
+
 jobs:
   build:
     uses: cabinet-ceipi/infra-devops-pipelines/.github/workflows/build-auto.yml@main
