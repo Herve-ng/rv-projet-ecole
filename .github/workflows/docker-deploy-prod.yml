@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    uses: cabinet-ceipi/infra-devops-pipelines/.github/workflows/build-manual.yml@main
+    uses: brege-ng/infra_devops_pipelines/.github/workflows/build-manual.yml@main
     with:
       dockerfile: ./Dockerfile
       context: .
