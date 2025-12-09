@@ -127,6 +127,7 @@ const Payments = () => {
   });
 
   const [filter, setFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('current'); // 'current', 'all'
 
   const handleOpenModal = () => {
     setFormData({
@@ -212,69 +213,90 @@ const Payments = () => {
   // Obtenir les classes uniques
   const classes = useUniqueClasses(payments, (p) => p.class);
 
-  // Filtrer les paiements par statut, classe et recherche
+  // Filtrer les paiements par statut, classe, recherche et mois
   const filteredPayments = payments.filter((payment) => {
     const matchesStatus = filter === 'all' || payment.status === filter;
     const matchesClass = !selectedClass || payment.class === selectedClass;
     const matchesSearch = !searchTerm ||
       payment.studentName.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesClass && matchesSearch;
+
+    // Filtrer par mois
+    let matchesMonth = true;
+    if (monthFilter === 'current') {
+      const paymentDate = new Date(payment.date);
+      const currentDate = new Date();
+      matchesMonth = paymentDate.getMonth() === currentDate.getMonth() &&
+                     paymentDate.getFullYear() === currentDate.getFullYear();
+    }
+
+    return matchesStatus && matchesClass && matchesSearch && matchesMonth;
+  });
+
+  // Calculer les statistiques pour le mois en cours
+  const currentMonthPayments = payments.filter((payment) => {
+    const paymentDate = new Date(payment.date);
+    const currentDate = new Date();
+    return paymentDate.getMonth() === currentDate.getMonth() &&
+           paymentDate.getFullYear() === currentDate.getFullYear();
   });
 
   const totalAmount = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const currentMonthTotal = currentMonthPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const currentMonthCount = currentMonthPayments.length;
 
   return (
     <Layout title="Gestion des Paiements">
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-secondary-100 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total des paiements</p>
-              <p className="text-2xl font-bold text-gray-800">{totalAmount.toLocaleString()} FCFA</p>
+              <p className="text-sm text-secondary-600 font-semibold uppercase tracking-wide">Total des paiements</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">{totalAmount.toLocaleString()} FCFA</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <CreditCard className="w-8 h-8 text-green-600" />
+            <div className="bg-gradient-to-br from-green-400 to-green-600 p-3 rounded-xl shadow-md">
+              <CreditCard className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-secondary-100 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Paiements du mois</p>
-              <p className="text-2xl font-bold text-gray-800">{payments.length}</p>
+              <p className="text-sm text-secondary-600 font-semibold uppercase tracking-wide">Paiements du mois</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-secondary-700 to-primary-600 bg-clip-text text-transparent">{currentMonthCount}</p>
+              <p className="text-xs text-gray-500 mt-1">{currentMonthTotal.toLocaleString()} FCFA</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <CheckCircle className="w-8 h-8 text-blue-600" />
+            <div className="bg-gradient-to-br from-secondary-400 to-secondary-600 p-3 rounded-xl shadow-md">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-secondary-100 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">En attente</p>
-              <p className="text-2xl font-bold text-gray-800">
+              <p className="text-sm text-secondary-600 font-semibold uppercase tracking-wide">En attente</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                 {payments.filter((p) => p.status === 'En attente').length}
               </p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-lg">
-              <Clock className="w-8 h-8 text-yellow-600" />
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-3 rounded-xl shadow-md">
+              <Clock className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Onglets de navigation */}
-      <div className="bg-white rounded-lg shadow-md mb-6">
-        <div className="flex border-b border-gray-200">
+      <div className="bg-white rounded-xl shadow-lg border-2 border-secondary-100 mb-6 overflow-hidden">
+        <div className="flex border-b-2 border-secondary-200">
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 ${
               activeTab === 'all'
-                ? 'border-b-2 border-primary-600 text-primary-600 bg-primary-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'border-b-4 border-primary-600 text-primary-600 bg-gradient-to-b from-primary-50 to-transparent'
+                : 'text-gray-600 hover:text-primary-600 hover:bg-secondary-50/50'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -284,10 +306,10 @@ const Payments = () => {
           </button>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 border-l-2 border-secondary-200 ${
               activeTab === 'pending'
-                ? 'border-b-2 border-yellow-600 text-yellow-600 bg-yellow-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'border-b-4 border-yellow-600 text-yellow-700 bg-gradient-to-b from-yellow-50 to-transparent'
+                : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50/50'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -297,10 +319,10 @@ const Payments = () => {
           </button>
           <button
             onClick={() => setActiveTab('paid')}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 border-l-2 border-secondary-200 ${
               activeTab === 'paid'
-                ? 'border-b-2 border-green-600 text-green-600 bg-green-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'border-b-4 border-green-600 text-green-700 bg-gradient-to-b from-green-50 to-transparent'
+                : 'text-gray-600 hover:text-green-600 hover:bg-green-50/50'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -320,13 +342,13 @@ const Payments = () => {
         action={
           <div className="flex space-x-2">
             {/* Boutons de vue */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border-2 border-secondary-300 rounded-xl overflow-hidden shadow-sm">
               <button
                 onClick={() => setViewMode('grouped')}
-                className={`px-3 py-2 text-sm ${
+                className={`px-3 py-2 text-sm transition-all duration-200 ${
                   viewMode === 'grouped'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
                 }`}
                 title="Vue groupée par classe"
               >
@@ -334,10 +356,10 @@ const Payments = () => {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 text-sm border-l border-gray-300 ${
+                className={`px-3 py-2 text-sm border-l-2 border-secondary-300 transition-all duration-200 ${
                   viewMode === 'list'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
                 }`}
                 title="Vue liste"
               >
@@ -358,29 +380,57 @@ const Payments = () => {
           </div>
         }
       >
-        {/* Filtres de statut */}
-        <div className="mb-4 flex space-x-2">
-          <Button
-            variant={filter === 'all' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setFilter('all')}
-          >
-            Tous
-          </Button>
-          <Button
-            variant={filter === 'Payé' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setFilter('Payé')}
-          >
-            Payés
-          </Button>
-          <Button
-            variant={filter === 'En attente' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setFilter('En attente')}
-          >
-            En attente
-          </Button>
+        {/* Filtres de statut et période */}
+        <div className="mb-4 flex flex-wrap gap-3">
+          <div className="flex space-x-2">
+            <Button
+              variant={filter === 'all' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFilter('all')}
+            >
+              Tous
+            </Button>
+            <Button
+              variant={filter === 'Payé' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFilter('Payé')}
+            >
+              Payés
+            </Button>
+            <Button
+              variant={filter === 'En attente' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFilter('En attente')}
+            >
+              En attente
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-2 ml-auto">
+            <span className="text-sm font-semibold text-secondary-700">Période:</span>
+            <div className="flex border-2 border-secondary-300 rounded-xl overflow-hidden shadow-sm">
+              <button
+                onClick={() => setMonthFilter('current')}
+                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  monthFilter === 'current'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
+                }`}
+              >
+                Mois en cours
+              </button>
+              <button
+                onClick={() => setMonthFilter('all')}
+                className={`px-4 py-1.5 text-sm font-medium border-l-2 border-secondary-300 transition-all duration-200 ${
+                  monthFilter === 'all'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
+                }`}
+              >
+                Tous les mois
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Filtre par classe et recherche */}
@@ -400,10 +450,10 @@ const Payments = () => {
           <GroupedByClass
             data={filteredPayments}
             renderItem={(payment) => (
-              <div className="px-6 py-4 flex items-center justify-between">
+              <div className="px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-secondary-50/30 hover:to-primary-50/30 transition-all duration-200 rounded-lg">
                 <div className="flex items-center flex-1 space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-6 h-6 text-primary-600" />
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-full flex items-center justify-center shadow-md">
+                    <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-4">
@@ -430,7 +480,7 @@ const Payments = () => {
                 <div className="flex space-x-2 ml-4">
                   <button
                     onClick={() => viewPaymentDetails(payment)}
-                    className="text-primary-600 hover:text-primary-900 p-2"
+                    className="text-secondary-600 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-all duration-200"
                     title="Voir les détails"
                   >
                     <Eye className="w-5 h-5" />
@@ -438,7 +488,7 @@ const Payments = () => {
                   {payment.status === 'Payé' && (
                     <button
                       onClick={() => generateReceipt(payment)}
-                      className="text-green-600 hover:text-green-900 p-2"
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 rounded-lg transition-all duration-200"
                       title="Télécharger le reçu"
                     >
                       <Download className="w-5 h-5" />
@@ -451,39 +501,39 @@ const Payments = () => {
             emptyMessage="Aucun paiement trouvé"
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border-2 border-secondary-100">
             <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gradient-to-r from-secondary-50 to-primary-50 border-b-2 border-secondary-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Élève
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Classe
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Montant
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y-2 divide-secondary-100">
               {filteredPayments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50">
+                <tr key={payment.id} className="hover:bg-gradient-to-r hover:from-secondary-50/30 hover:to-primary-50/30 transition-all duration-200">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     #{payment.id}
                   </td>
@@ -509,7 +559,7 @@ const Payments = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => viewPaymentDetails(payment)}
-                        className="text-primary-600 hover:text-primary-900"
+                        className="text-secondary-600 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-all duration-200"
                         title="Voir les détails"
                       >
                         <Eye className="w-5 h-5" />
@@ -517,7 +567,7 @@ const Payments = () => {
                       {payment.status === 'Payé' && (
                         <button
                           onClick={() => generateReceipt(payment)}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 rounded-lg transition-all duration-200"
                           title="Télécharger le reçu"
                         >
                           <Download className="w-5 h-5" />

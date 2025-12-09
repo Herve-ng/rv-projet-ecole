@@ -1,59 +1,69 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
-import { Plus, Edit, Trash2, BookOpen, Users } from 'lucide-react';
+import { BookOpen, Users, School, Plus, Edit, Trash2, MoveVertical } from 'lucide-react';
+import { useClassesStore } from '@/store/classesStore';
+import { useStudentsStore } from '@/store/studentsStore';
 
 const Classes = () => {
-  const [classes, setClasses] = useState([
-    {
-      id: 1,
-      name: 'Terminale A',
-      level: 'Terminale',
-      section: 'Littéraire',
-      teacher: 'Dr. Pierre Ndiaye',
-      studentCount: 32,
-      capacity: 40,
-      room: 'Salle 101',
-    },
-    {
-      id: 2,
-      name: '1ère S',
-      level: '1ère',
-      section: 'Scientifique',
-      teacher: 'Mme. Fatou Diop',
-      studentCount: 28,
-      capacity: 35,
-      room: 'Salle 205',
-    },
-  ]);
-
+  const { classes, addClass, updateClass, deleteClass } = useClassesStore();
+  const { students } = useStudentsStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [movingClass, setMovingClass] = useState(null);
+  const [newLevel, setNewLevel] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     level: '',
     section: '',
-    teacher: '',
     capacity: '',
-    room: '',
   });
+
+  const availableLevels = ['Primaire', 'Collège', 'Lycée'];
+
+  // Calculer le nombre d'élèves par classe
+  const classesWithStudents = useMemo(() => {
+    return classes.map((classItem) => {
+      const studentsInClass = students.filter((s) => s.class === classItem.name);
+      return {
+        ...classItem,
+        studentCount: studentsInClass.length,
+      };
+    });
+  }, [classes, students]);
+
+  // Grouper les classes par niveau
+  const groupedClasses = useMemo(() => {
+    const groups = {};
+    classesWithStudents.forEach((classItem) => {
+      if (!groups[classItem.level]) {
+        groups[classItem.level] = [];
+      }
+      groups[classItem.level].push(classItem);
+    });
+    return groups;
+  }, [classesWithStudents]);
 
   const handleOpenModal = (classItem = null) => {
     if (classItem) {
       setEditingClass(classItem);
-      setFormData(classItem);
+      setFormData({
+        name: classItem.name,
+        level: classItem.level,
+        section: classItem.section,
+        capacity: classItem.capacity,
+      });
     } else {
       setEditingClass(null);
       setFormData({
         name: '',
         level: '',
         section: '',
-        teacher: '',
         capacity: '',
-        room: '',
       });
     }
     setIsModalOpen(true);
@@ -73,30 +83,45 @@ const Classes = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (editingClass) {
-      setClasses(
-        classes.map((c) =>
-          c.id === editingClass.id ? { ...formData, id: c.id, studentCount: c.studentCount } : c
-        )
-      );
+      updateClass(editingClass.id, formData);
     } else {
-      setClasses([
-        ...classes,
-        {
-          ...formData,
-          id: Date.now(),
-          studentCount: 0,
-        },
-      ]);
+      addClass(formData);
     }
-
     handleCloseModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id, className) => {
+    // Vérifier si des élèves sont dans cette classe
+    const studentsInClass = students.filter((s) => s.class === className);
+    if (studentsInClass.length > 0) {
+      alert(
+        `Impossible de supprimer cette classe. ${studentsInClass.length} élève(s) sont inscrits dans cette classe.`
+      );
+      return;
+    }
+
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette classe ?')) {
-      setClasses(classes.filter((c) => c.id !== id));
+      deleteClass(id);
+    }
+  };
+
+  const handleOpenMoveModal = (classItem) => {
+    setMovingClass(classItem);
+    setNewLevel(classItem.level);
+    setIsMoveModalOpen(true);
+  };
+
+  const handleCloseMoveModal = () => {
+    setIsMoveModalOpen(false);
+    setMovingClass(null);
+    setNewLevel('');
+  };
+
+  const handleMoveClass = () => {
+    if (movingClass && newLevel && newLevel !== movingClass.level) {
+      updateClass(movingClass.id, { ...movingClass, level: newLevel });
+      handleCloseMoveModal();
     }
   };
 
@@ -110,88 +135,109 @@ const Classes = () => {
           </Button>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classes.map((classItem) => {
-            const occupancyRate = (classItem.studentCount / classItem.capacity) * 100;
+        {Object.entries(groupedClasses).map(([level, levelClasses]) => (
+          <div key={level} className="mb-8 last:mb-0">
+            <div className="flex items-center mb-4">
+              <School className="w-5 h-5 text-primary-600 mr-2" />
+              <h2 className="text-xl font-bold text-gray-800">{level}</h2>
+              <span className="ml-3 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
+                {levelClasses.length} classe{levelClasses.length > 1 ? 's' : ''}
+              </span>
+            </div>
 
-            return (
-              <div
-                key={classItem.id}
-                className="bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mr-3">
-                      <BookOpen className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-800">{classItem.name}</h3>
-                      <p className="text-sm text-gray-500">{classItem.section}</p>
-                    </div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {levelClasses.map((classItem) => {
+                const occupancyRate = classItem.capacity > 0
+                  ? (classItem.studentCount / classItem.capacity) * 100
+                  : 0;
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <GraduationCap className="w-4 h-4 mr-2" />
-                    <span>{classItem.teacher}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Users className="w-4 h-4 mr-2" />
-                    <span>
-                      {classItem.studentCount}/{classItem.capacity} élèves
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    <span>{classItem.room}</span>
-                  </div>
-                </div>
-
-                {/* Barre de progression */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span>Taux d'occupation</span>
-                    <span>{occupancyRate.toFixed(0)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${
-                        occupancyRate >= 90
-                          ? 'bg-red-500'
-                          : occupancyRate >= 70
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                      }`}
-                      style={{ width: `${occupancyRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={Edit}
-                    onClick={() => handleOpenModal(classItem)}
-                    className="flex-1"
+                return (
+                  <div
+                    key={classItem.id}
+                    className="bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-lg p-5 hover:shadow-lg transition-all"
                   >
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    icon={Trash2}
-                    onClick={() => handleDelete(classItem.id)}
-                    className="flex-1"
-                  >
-                    Supprimer
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-bold text-gray-800 truncate">
+                            {classItem.name}
+                          </h3>
+                          <p className="text-xs text-gray-500 truncate">{classItem.section}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center text-gray-600">
+                          <Users className="w-4 h-4 mr-1.5 flex-shrink-0" />
+                          <span className="text-xs">Élèves</span>
+                        </div>
+                        <span className="font-semibold text-gray-800">
+                          {classItem.studentCount}/{classItem.capacity}
+                        </span>
+                      </div>
+
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>Taux d'occupation</span>
+                          <span className="font-semibold">{occupancyRate.toFixed(0)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              occupancyRate >= 90
+                                ? 'bg-red-500'
+                                : occupancyRate >= 70
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(occupancyRate, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={Edit}
+                            onClick={() => handleOpenModal(classItem)}
+                            className="flex-1"
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={MoveVertical}
+                            onClick={() => handleOpenMoveModal(classItem)}
+                            className="flex-1"
+                          >
+                            Déplacer
+                          </Button>
+                        </div>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDelete(classItem.id, classItem.name)}
+                          className="w-full"
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
         {classes.length === 0 && (
           <div className="text-center py-12">
@@ -201,6 +247,7 @@ const Classes = () => {
         )}
       </Card>
 
+      {/* Modal d'ajout/édition */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -222,7 +269,7 @@ const Classes = () => {
               name="level"
               value={formData.level}
               onChange={handleChange}
-              placeholder="Ex: Terminale"
+              placeholder="Ex: Lycée"
               required
             />
             <Input
@@ -230,37 +277,19 @@ const Classes = () => {
               name="section"
               value={formData.section}
               onChange={handleChange}
-              placeholder="Ex: Littéraire"
+              placeholder="Ex: Scientifique"
               required
             />
           </div>
           <Input
-            label="Enseignant principal"
-            name="teacher"
-            value={formData.teacher}
+            label="Capacité maximale"
+            type="number"
+            name="capacity"
+            value={formData.capacity}
             onChange={handleChange}
-            placeholder="Nom de l'enseignant"
+            placeholder="Ex: 40"
             required
           />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Capacité maximale"
-              type="number"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-              placeholder="Ex: 40"
-              required
-            />
-            <Input
-              label="Salle"
-              name="room"
-              value={formData.room}
-              onChange={handleChange}
-              placeholder="Ex: Salle 101"
-              required
-            />
-          </div>
 
           <div className="flex justify-end space-x-3 mt-6">
             <Button variant="secondary" onClick={handleCloseModal} type="button">
@@ -271,6 +300,73 @@ const Classes = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal de déplacement */}
+      <Modal
+        isOpen={isMoveModalOpen}
+        onClose={handleCloseMoveModal}
+        title="Déplacer la classe"
+        size="md"
+      >
+        {movingClass && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <School className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-semibold text-blue-900">
+                  Classe: {movingClass.name}
+                </h3>
+              </div>
+              <p className="text-sm text-blue-700">
+                Niveau actuel: <span className="font-semibold">{movingClass.level}</span>
+              </p>
+              <p className="text-sm text-blue-700">
+                Section: {movingClass.section}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nouveau niveau <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={newLevel}
+                onChange={(e) => setNewLevel(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                {availableLevels.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {newLevel !== movingClass.level && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Attention:</strong> La classe sera déplacée de{' '}
+                  <span className="font-semibold">{movingClass.level}</span> vers{' '}
+                  <span className="font-semibold">{newLevel}</span>.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" onClick={handleCloseMoveModal} type="button">
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleMoveClass}
+                disabled={!newLevel || newLevel === movingClass.level}
+              >
+                Déplacer la classe
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </Layout>
   );

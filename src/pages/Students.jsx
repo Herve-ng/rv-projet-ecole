@@ -6,14 +6,18 @@ import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
 import ClassFilter from '@/components/common/ClassFilter';
 import GroupedByClass from '@/components/common/GroupedByClass';
-import { Plus, Edit, Trash2, Search, User, List, Grid } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, User, List, Grid, Archive } from 'lucide-react';
 import { useStudentsStore } from '@/store/studentsStore';
 import { studentsService } from '@/services/studentsService';
 import { useFiltersStore, useUniqueClasses } from '@/store/filtersStore';
+import { useArchiveStore } from '@/store/archiveStore';
+import { useClassesStore } from '@/store/classesStore';
 
 const Students = () => {
   const { students, setStudents, addStudent, updateStudent, deleteStudent } = useStudentsStore();
   const { selectedClass, searchTerm, viewMode, setSelectedClass, setSearchTerm, setViewMode } = useFiltersStore();
+  const { archiveStudent } = useArchiveStore();
+  const { classes: availableClasses } = useClassesStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
@@ -107,6 +111,14 @@ const Students = () => {
     }
   };
 
+  const handleArchive = (student) => {
+    const reason = prompt('Raison de l\'archivage (optionnel):');
+    if (reason !== null) {
+      archiveStudent({ ...student, archivedReason: reason || 'Non spécifiée' });
+      deleteStudent(student.id);
+    }
+  };
+
   // Obtenir les classes uniques
   const classes = useUniqueClasses(students, (s) => s.class);
 
@@ -152,6 +164,14 @@ const Students = () => {
           Modifier
         </Button>
         <Button
+          variant="secondary"
+          size="sm"
+          icon={Archive}
+          onClick={() => handleArchive(student)}
+        >
+          Archiver
+        </Button>
+        <Button
           variant="danger"
           size="sm"
           icon={Trash2}
@@ -170,13 +190,13 @@ const Students = () => {
         action={
           <div className="flex space-x-2">
             {/* Boutons de vue */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border-2 border-secondary-300 rounded-xl overflow-hidden shadow-sm">
               <button
                 onClick={() => setViewMode('grouped')}
-                className={`px-3 py-2 text-sm ${
+                className={`px-3 py-2 text-sm transition-all duration-200 ${
                   viewMode === 'grouped'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
                 }`}
                 title="Vue groupée par classe"
               >
@@ -184,10 +204,10 @@ const Students = () => {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 text-sm border-l border-gray-300 ${
+                className={`px-3 py-2 text-sm border-l-2 border-secondary-300 transition-all duration-200 ${
                   viewMode === 'list'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-secondary-50'
                 }`}
                 title="Vue liste"
               >
@@ -225,34 +245,34 @@ const Students = () => {
             emptyMessage="Aucun élève trouvé"
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border-2 border-secondary-100">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gradient-to-r from-secondary-50 to-primary-50 border-b-2 border-secondary-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                     Élève
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                     Classe
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                     Téléphone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y-2 divide-secondary-100">
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className="hover:bg-gray-50">
+                  <tr key={student.id} className="hover:bg-gradient-to-r hover:from-secondary-50/30 hover:to-primary-50/30 transition-all duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                          <User className="w-6 h-6 text-primary-600" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                          <User className="w-6 h-6 text-white" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">
@@ -282,6 +302,14 @@ const Students = () => {
                           onClick={() => handleOpenModal(student)}
                         >
                           Modifier
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          icon={Archive}
+                          onClick={() => handleArchive(student)}
+                        >
+                          Archiver
                         </Button>
                         <Button
                           variant="danger"
@@ -355,13 +383,25 @@ const Students = () => {
               onChange={handleChange}
               required
             />
-            <Input
-              label="Classe"
-              name="class"
-              value={formData.class}
-              onChange={handleChange}
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Classe <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="class"
+                value={formData.class}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Sélectionner une classe</option>
+                {availableClasses.map((classItem) => (
+                  <option key={classItem.id} value={classItem.name}>
+                    {classItem.name} - {classItem.level}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Input
               label="Nom du parent/tuteur"
               name="parentName"

@@ -4,12 +4,14 @@ import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
-import { Plus, Edit, Trash2, Search, GraduationCap } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, GraduationCap, Archive } from 'lucide-react';
 import { useTeachersStore } from '@/store/teachersStore';
 import { teachersService } from '@/services/teachersService';
+import { useArchiveStore } from '@/store/archiveStore';
 
 const Teachers = () => {
   const { teachers, setTeachers, addTeacher, updateTeacher, deleteTeacher } = useTeachersStore();
+  const { archiveTeacher } = useArchiveStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,6 +103,14 @@ const Teachers = () => {
     }
   };
 
+  const handleArchive = (teacher) => {
+    const reason = prompt('Raison de l\'archivage (optionnel):');
+    if (reason !== null) {
+      archiveTeacher({ ...teacher, archivedReason: reason || 'Non spécifiée' });
+      deleteTeacher(teacher.id);
+    }
+  };
+
   const filteredTeachers = teachers.filter((teacher) =>
     `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -129,37 +139,37 @@ const Teachers = () => {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border-2 border-secondary-100">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gradient-to-r from-secondary-50 to-primary-50 border-b-2 border-secondary-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Enseignant
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Matière
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Qualification
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Téléphone
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y-2 divide-secondary-100">
               {filteredTeachers.map((teacher) => (
-                <tr key={teacher.id} className="hover:bg-gray-50">
+                <tr key={teacher.id} className="hover:bg-gradient-to-r hover:from-secondary-50/30 hover:to-primary-50/30 transition-all duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                        <GraduationCap className="w-6 h-6 text-green-600" />
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mr-3 shadow-md">
+                        <GraduationCap className="w-6 h-6 text-white" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -191,6 +201,14 @@ const Teachers = () => {
                         onClick={() => handleOpenModal(teacher)}
                       >
                         Modifier
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Archive}
+                        onClick={() => handleArchive(teacher)}
+                      >
+                        Archiver
                       </Button>
                       <Button
                         variant="danger"

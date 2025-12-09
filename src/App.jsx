@@ -8,6 +8,7 @@ import Students from './pages/Students';
 import Teachers from './pages/Teachers';
 import Classes from './pages/Classes';
 import Payments from './pages/Payments';
+import Archives from './pages/Archives';
 
 // Route protégée
 const ProtectedRoute = ({ children }) => {
@@ -70,6 +71,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Payments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archives"
+          element={
+            <ProtectedRoute>
+              <Archives />
             </ProtectedRoute>
           }
         />

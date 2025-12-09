@@ -36,7 +36,9 @@ const Dashboard = () => {
       title: 'Élèves',
       value: stats.totalStudents,
       icon: Users,
-      color: 'bg-blue-500',
+      color: 'from-secondary-500 to-secondary-600',
+      bgColor: 'bg-secondary-100',
+      iconColor: 'text-secondary-600',
       change: '+12%',
       isPositive: true,
     },
@@ -44,7 +46,9 @@ const Dashboard = () => {
       title: 'Enseignants',
       value: stats.totalTeachers,
       icon: GraduationCap,
-      color: 'bg-green-500',
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-100',
+      iconColor: 'text-green-600',
       change: '+5%',
       isPositive: true,
     },
@@ -52,7 +56,9 @@ const Dashboard = () => {
       title: 'Classes',
       value: stats.totalClasses,
       icon: BookOpen,
-      color: 'bg-purple-500',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-100',
+      iconColor: 'text-purple-600',
       change: '0%',
       isPositive: true,
     },
@@ -60,7 +66,9 @@ const Dashboard = () => {
       title: 'Paiements',
       value: `${stats.totalPayments.toLocaleString()} FCFA`,
       icon: CreditCard,
-      color: 'bg-orange-500',
+      color: 'from-primary-500 to-primary-600',
+      bgColor: 'bg-primary-100',
+      iconColor: 'text-primary-600',
       change: '+8%',
       isPositive: true,
     },
@@ -75,25 +83,25 @@ const Dashboard = () => {
           const ChangeIcon = card.isPositive ? TrendingUp : TrendingDown;
 
           return (
-            <div key={index} className="bg-white rounded-lg shadow-md p-6">
+            <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-l-4 border-transparent hover:border-primary-500 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">
-                <div className={`${card.color} p-3 rounded-lg`}>
+                <div className={`bg-gradient-to-br ${card.color} p-3 rounded-xl shadow-md`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <div className={`flex items-center text-sm ${card.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`flex items-center text-sm font-semibold px-3 py-1 rounded-full ${card.isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                   <ChangeIcon className="w-4 h-4 mr-1" />
                   <span>{card.change}</span>
                 </div>
               </div>
-              <h3 className="text-gray-500 text-sm font-medium mb-1">{card.title}</h3>
-              <p className="text-2xl font-bold text-gray-800">{card.value}</p>
+              <h3 className="text-gray-500 text-sm font-medium mb-1 uppercase tracking-wide">{card.title}</h3>
+              <p className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{card.value}</p>
             </div>
           );
         })}
       </div>
 
       {/* Graphiques et informations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
         {/* Activités récentes */}
         <Card title="Activités récentes">
           <div className="space-y-4">
@@ -153,7 +161,7 @@ const Dashboard = () => {
 
       {/* Statistiques par classe */}
       <Card title="Statistiques par classe" icon={School}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {classes.length > 0 ? (
             classes.map((classItem, index) => (
               <div
@@ -161,13 +169,13 @@ const Dashboard = () => {
                 className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                  <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <School className="w-5 h-5 text-primary-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{classItem.name}</h3>
+                    <h3 className="font-semibold text-gray-900 truncate">{classItem.name}</h3>
                   </div>
-                  <span className="px-3 py-1 bg-primary-600 text-white rounded-full text-sm font-semibold">
+                  <span className="px-3 py-1 bg-primary-600 text-white rounded-full text-sm font-semibold flex-shrink-0 ml-2">
                     {classItem.count}
                   </span>
                 </div>
@@ -213,10 +221,10 @@ const Dashboard = () => {
 // Composant pour les activités récentes
 const ActivityItem = ({ title, description, time, color }) => (
   <div className="flex items-start">
-    <div className={`${color} w-2 h-2 rounded-full mt-2 mr-3`}></div>
-    <div className="flex-1">
-      <h4 className="text-sm font-medium text-gray-800">{title}</h4>
-      <p className="text-sm text-gray-600">{description}</p>
+    <div className={`${color} w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0`}></div>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-sm font-medium text-gray-800 break-words">{title}</h4>
+      <p className="text-sm text-gray-600 break-words">{description}</p>
       <p className="text-xs text-gray-400 mt-1">{time}</p>
     </div>
   </div>
@@ -224,14 +232,14 @@ const ActivityItem = ({ title, description, time, color }) => (
 
 // Composant pour les paiements en attente
 const PaymentItem = ({ student, amount, dueDate, status }) => (
-  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-    <div>
-      <h4 className="text-sm font-medium text-gray-800">{student}</h4>
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg">
+    <div className="min-w-0 flex-1">
+      <h4 className="text-sm font-medium text-gray-800 truncate">{student}</h4>
       <p className="text-xs text-gray-500">Échéance: {dueDate}</p>
     </div>
-    <div className="text-right">
-      <p className="text-sm font-semibold text-gray-800">{amount}</p>
-      <span className={`text-xs px-2 py-1 rounded-full ${
+    <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
+      <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">{amount}</p>
+      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
         status === 'En retard' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
       }`}>
         {status}
