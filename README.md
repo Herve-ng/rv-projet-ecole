@@ -22,6 +22,18 @@ Application web moderne de gestion d'école construite avec React, Vite et Tailw
 - **Axios** - Client HTTP pour les appels API
 - **Lucide React** - Icônes modernes
 
+## docker-compose
+
+```
+services:
+  frontend:
+    image: ghcr.io/herve-ng/rv-projet-ecole:latest  # ton image GHCR
+    container_name: frontend_app
+    ports:
+      - "3003:3000"
+```
+
+
 ## Structure du Projet
 
 ```
